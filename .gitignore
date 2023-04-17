@@ -1,0 +1,7 @@
+
+# Ignore vim temporary files
+*.swp
+
+# Ignore zip files
+*.zip
+# task_1/backup.zip
