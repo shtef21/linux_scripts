@@ -102,10 +102,3 @@
     0 17 * * 1-5 sudo sh ~/github/shtef21/linux_scripts/task_2/unblock_fb.sh
 
 # Na ovaj način, Facebook se blokirao na početku radnog vremena, a deblokirao/omogućio na kraju.
-
-
-
-
-
-
-# ----- Zadatak 3 - Ograničavanje Facebooka u intervalima ----- #
