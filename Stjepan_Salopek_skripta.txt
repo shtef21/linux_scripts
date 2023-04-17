@@ -1,0 +1,111 @@
+
+
+
+
+# ----- Zadatak 1 - Slanje backupa mailom ----- #
+
+# Instalacija alata mutt, sendmail te mysql-server i apache2
+    sudo apt -qq update
+    sudo apt -qq -y install mutt
+    sudo apt-get -qq -y install sendmail
+    sudo apt -qq -y install mysql-server
+    sudo apt -qq -y install apache2
+
+# Inicijaliziranje mutt direktorija i datoteka za rad:
+    mkdir -p ~/.mutt/cache/headers
+    mkdir ~/.mutt/cache/bodies
+    touch ~/.mutt/certificates
+    touch ~/.mutt/muttrc
+
+# Zatim je potrebno konfigurirati mutt pošiljatelja u datoteci muttrc sljedećim naredbama (<lozinka apl> je token generiran unutar gmail računa):
+    set from = "<korisn_ime>@gmail.com"
+    set realname = "Ime prezime"
+    set imap_user = "<korisn_ime>@gmail.com"
+    set imap_pass = "<lozinka apl>"
+
+    # SMTP settings
+    set smtp_url = "smtps://<korisn_ime>@smtp.gmail.com"
+    set smtp_pass = "<lozinka apl>"
+
+    # Remote Gmail folders
+    set folder = "imaps://imap.gmail.com/"
+    set spoolfile = "+INBOX"
+    set postponed = "+[Gmail]/Drafts"
+    set record = "+[Gmail]/Sent Mail"
+    set trash = "+[Gmail]/Trash"
+
+# Nakon navedenih koraka, pokrenuta je sljedeća skripta:
+    #!/bin/bash
+    # Prepare zip
+    attachment_fname="./backup.zip"
+    echo "Zipping mysql and apache2 backups to $attachment_fname..."
+    sudo zip -qq -r $attachment_fname /var/lib/mysql /etc/apache2/apache2.conf
+
+    # Send e-mail
+    echo "Sending mail..."
+    receiver="<receiver e-mail address>"
+    mutt -s "Backup" -a backup.zip -- $receiver < /dev/null
+
+    echo "Done."
+
+
+
+
+
+
+# ----- Zadatak 2 - Ograničavanje Facebooka u intervalima ----- #
+
+# Da se postigne blokiranje facebooka, njegove domene dodane su u /etc/hosts datoteku.
+# Na taj način je domena definirana pod lokalnu mrežu, a pravi facebook.com je nevidljiv.
+
+# Skripta block_fb.sh:
+    # Definiranje putanje i stringa za blokiranje
+    hosts_file="/etc/hosts"
+    block_fb_config="127.0.0.1 facebook.com www.facebook.com m.facebook.com"
+
+    # Unesi string u /etc/hosts ako već ne postoji
+    if sudo grep "$block_fb_config" $hosts_file;
+    then
+        echo "$date - Facebook already blocked." >> ./block-fb-logs.txt
+    else
+        echo "$date - Blocking Facebook..." >> ./block-fb-logs.txt
+        sudo echo "$block_fb_config" >> $hosts_file
+        echo "$date - Done." >> ./block-fb-logs.txt
+    fi
+
+    exit 1
+
+# Skripta unblock_fb.sh:
+    # Definiranje putanje i stringa za blokiranje    
+    hosts_file="/etc/hosts"
+    block_fb_config="127.0.0.1 facebook.com www.facebook.com m.facebook.com"
+
+    # Ako string za blokiranje postoji u /etc/hosts, makni ga
+    if sudo grep "$block_fb_config" $hosts_file
+    then
+        echo "$date - Found facebook block. Unblocking..." >> ./block-fb-logs.txt
+        sudo sed -i "s/$block_fb_config//g" $hosts_file
+        echo "$date - Done." >> ./block-fb-logs.txt
+    else
+        echo "$date - Facebook has not been blocked." >> ./block-fb-logs.txt
+    fi
+    exit 1
+
+# Nadalje, korištena je naredba "crontab -e" za dodavanje rasporeda blokiranja i deblokiranja,
+# kao i naredba "grep CRON /var/log/syslog" za provjeravanje da li se skripta ispravno izvršava
+
+# Naredbe unesene unutar "crontab -e" sučelja:
+    # Block Facebook at 7:00 on workdays
+    0 7 * * 1-5 sudo sh ~/github/shtef21/linux_scripts/task_2/block_fb.sh
+
+    # Unblock Facebook at 17:00 on workdays
+    0 17 * * 1-5 sudo sh ~/github/shtef21/linux_scripts/task_2/unblock_fb.sh
+
+# Na ovaj način, Facebook se blokirao na početku radnog vremena, a deblokirao/omogućio na kraju.
+
+
+
+
+
+
+# ----- Zadatak 3 - Ograničavanje Facebooka u intervalima ----- #
