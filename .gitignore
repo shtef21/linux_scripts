@@ -4,4 +4,6 @@
 
 # Ignore zip files
 *.zip
-# task_1/backup.zip
+
+# Ignore cron logs
+task_2/block-fb-logs.txt
